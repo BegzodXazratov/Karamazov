@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karamazov Sinov Markazi</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 450px;
+            width: 90%;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 30px;
+            color: #e94560;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .answers-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            position: relative;
+            min-height: 250px;
+        }
+
+        .btn {
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            width: 100%;
+        }
+
+        .btn-safe {
+            background-color: #0f3460;
+            color: white;
+            border: 2px solid #e94560;
+        }
+
+        .btn-safe:hover {
+            background-color: #e94560;
+            transform: scale(1.03);
+        }
+
+        .btn-danger {
+            background-color: #e94560;
+            color: white;
+            position: absolute;
+            transition: all 0.15s ease-out;
+            width: 100%;
+            left: 0;
+        }
+
+        /* 2 va 3 javoblar uchun boshlang'ich joylashuvlari */
+        #btn2 {
+            top: 75px;
+        }
+
+        #btn3 {
+            top: 150px;
+        }
+
+        #btn4 {
+            /* 4-tugma uchun joy */
+            margin-top: 75px; 
+        }
+
+        /* Natija ekrani */
+        .result-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .result-screen h2 {
+            font-size: 26px;
+            color: #4ecca3;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .result-screen p {
+            font-size: 20px;
+            color: #ffd369;
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="quizContainer">
+        <h1>Karamazov buyukmi?</h1>
+        <div class="answers-grid" id="answersGrid">
+            <button class="btn btn-safe" onclick="handleWin()">1. Ha buyuk</button>
+            <button class="btn btn-danger" id="btn2" onmouseenter="runAway(this)" ontouchstart="runAway(this)" onclick="blockClick(event)">2. Yo'q buyuk emas</button>
+            <button class="btn btn-danger" id="btn3" onmouseenter="runAway(this)" ontouchstart="runAway(this)" onclick="blockClick(event)">3. Tan olmiman</button>
+            <button class="btn btn-safe" id="btn4" onclick="handleWin()">4. 1 javob to'g'ri</button>
+        </div>
+    </div>
+
+    <div class="container result-screen" id="resultContainer">
+        <h2 id="msg1"></h2>
+        <p id="msg2"></p>
+    </div>
+
+    <script>
+        function runAway(btn) {
+            // Ekranning kengligi va balandligini olamiz
+            const padding = 40;
+            const maxX = window.innerWidth - btn.offsetWidth - padding;
+            const maxY = window.innerHeight - btn.offsetHeight - padding;
+
+            // Tasodifiy yangi koordinatalar hosil qilamiz
+            const randomX = Math.floor(Math.random() * (maxX - padding)) + padding;
+            const randomY = Math.floor(Math.random() * (maxY - padding)) + padding;
+
+            // Tugmani absolut joylashuvga o'tkazib, ekranning boshqa burchagiga otamiz
+            btn.style.position = 'fixed';
+            btn.style.left = randomX + 'px';
+            btn.style.top = randomY + 'px';
+            
+            // Kulguli aylanish effekti
+            const randomRotate = Math.floor(Math.random() * 360);
+            btn.style.transform = `rotate(${randomRotate}deg) scale(0.95)`;
+        }
+
+        function blockClick(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            alert("Haddindan oshma! Bu tugmani bosib bo'lmaydi! 😎");
+        }
+
+        function handleWin() {
+            const quizContainer = document.getElementById('quizContainer');
+            const resultContainer = document.getElementById('resultContainer');
+            
+            quizContainer.style.display = 'none';
+            resultContainer.style.display = 'flex';
+
+            const msg1 = document.getElementById('msg1');
+            const msg2 = document.getElementById('msg2');
+
+            // 1-xabar chiqishi
+            msg1.textContent = "To'g'ri topdingiz bo'tam";
+
+            // 1.5 sekunddan keyin 2-xabar chiqishi
+            setTimeout(() => {
+                msg2.textContent = "Bo'ldi chiqib ketaver harp";
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

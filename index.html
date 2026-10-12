@@ -38,7 +38,7 @@
 
         h1 {
             font-size: 24px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             color: #e94560;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
@@ -48,7 +48,6 @@
             flex-direction: column;
             gap: 15px;
             position: relative;
-            min-height: 250px;
         }
 
         .btn {
@@ -58,7 +57,7 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
+            transition: background 0.2s;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             width: 100%;
         }
@@ -74,30 +73,17 @@
             transform: scale(1.03);
         }
 
+        /* Qochuvchi tugmalar uchun alohida dizayn */
         .btn-danger {
             background-color: #e94560;
             color: white;
-            position: absolute;
-            transition: all 0.15s ease-out;
-            width: 100%;
-            left: 0;
+            position: relative;
+            transition: transform 0.1s ease-out;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        /* 2 va 3 javoblar uchun boshlang'ich joylashuvlari */
-        #btn2 {
-            top: 75px;
-        }
-
-        #btn3 {
-            top: 150px;
-        }
-
-        #btn4 {
-            /* 4-tugma uchun joy */
-            margin-top: 75px; 
-        }
-
-        /* Natija ekrani */
+        /* Natija ekkoni */
         .result-screen {
             display: none;
             flex-direction: column;
@@ -131,8 +117,8 @@
         <h1>Karamazov buyukmi?</h1>
         <div class="answers-grid" id="answersGrid">
             <button class="btn btn-safe" onclick="handleWin()">1. Ha buyuk</button>
-            <button class="btn btn-danger" id="btn2" onmouseenter="runAway(this)" ontouchstart="runAway(this)" onclick="blockClick(event)">2. Yo'q buyuk emas</button>
-            <button class="btn btn-danger" id="btn3" onmouseenter="runAway(this)" ontouchstart="runAway(this)" onclick="blockClick(event)">3. Tan olmiman</button>
+            <button class="btn btn-danger" id="btn2" onmousemove="dodge(event, this)" ontouchmove="dodgeTouch(event, this)" onclick="blockClick(event)">2. Yo'q buyuk emas</button>
+            <button class="btn btn-danger" id="btn3" onmousemove="dodge(event, this)" ontouchmove="dodgeTouch(event, this)" onclick="blockClick(event)">3. Tan olmiman</button>
             <button class="btn btn-safe" id="btn4" onclick="handleWin()">4. 1 javob to'g'ri</button>
         </div>
     </div>
@@ -143,30 +129,63 @@
     </div>
 
     <script>
-        function runAway(btn) {
-            // Ekranning kengligi va balandligini olamiz
-            const padding = 40;
-            const maxX = window.innerWidth - btn.offsetWidth - padding;
-            const maxY = window.innerHeight - btn.offsetHeight - padding;
+        // Har bir qochuvchi tugma uchun siljish koordinatalarini saqlab turamiz
+        const positions = {
+            btn2: { x: 0, y: 0 },
+            btn3: { x: 0, y: 0 }
+        };
 
-            // Tasodifiy yangi koordinatalar hosil qilamiz
-            const randomX = Math.floor(Math.random() * (maxX - padding)) + padding;
-            const randomY = Math.floor(Math.random() * (maxY - padding)) + padding;
+        function calculateNewPos(btn, clientX, clientY) {
+            const rect = btn.getBoundingClientRect();
+            // Tugmaning markazi
+            const btnCenterX = rect.left + rect.width / 2;
+            const btnCenterY = rect.top + rect.height / 2;
 
-            // Tugmani absolut joylashuvga o'tkazib, ekranning boshqa burchagiga otamiz
-            btn.style.position = 'fixed';
-            btn.style.left = randomX + 'px';
-            btn.style.top = randomY + 'px';
+            // Mishka yoki barmoqdan qaysi tomonga qochish kerakligini hisoblaymiz (aks yo'nalishda)
+            let dx = btnCenterX - clientX;
+            let dy = btnCenterY - clientY;
+
+            // Masofani normallashtiramiz
+            const dist = Math.sqrt(dx * dx + dy * dy);
             
-            // Kulguli aylanish effekti
-            const randomRotate = Math.floor(Math.random() * 360);
-            btn.style.transform = `rotate(${randomRotate}deg) scale(0.95)`;
+            // Agar juda yaqin kelgan bo'lsa (masalan 90 piksel)
+            if (dist < 90) {
+                // Agar kordinatalar 0 ga yaqin bo'lsa, tasodifiy surilish beramiz
+                if (dx === 0 && dy === 0) {
+                    dx = (Math.random() - 0.5) * 50;
+                    dy = (Math.random() - 0.5) * 50;
+                }
+
+                const id = btn.id;
+                // Qochish tezligi va yo'nalishi (parallel va kulguli qochish)
+                positions[id].x += (dx / dist) * 25;
+                positions[id].y += (dy / dist) * 25;
+
+                // Ekrandan chiqib ketib yo'qolib qolmasligi uchun chegaralovchi limitlar (-120 dan +120 gacha)
+                const limit = 110;
+                positions[id].x = Math.max(-limit, Math.min(limit, positions[id].x));
+                positions[id].y = Math.max(-limit, Math.min(limit, positions[id].y));
+
+                // Tugmani suramiz va biroz qimirlatib (aylantirib) qo'yamiz
+                const rotateDeg = positions[id].x * 0.2;
+                btn.style.transform = `translate(${positions[id].x}px, ${positions[id].y}px) rotate(${rotateDeg}deg)`;
+            }
+        }
+
+        function dodge(e, btn) {
+            calculateNewPos(btn, e.clientX, e.clientY);
+        }
+
+        function dodgeTouch(e, btn) {
+            if (e.touches && e.touches.length > 0) {
+                const touch = e.touches[0];
+                calculateNewPos(btn, touch.clientX, touch.clientY);
+            }
         }
 
         function blockClick(event) {
             event.preventDefault();
             event.stopPropagation();
-            alert("Haddindan oshma! Bu tugmani bosib bo'lmaydi! 😎");
         }
 
         function handleWin() {
@@ -179,10 +198,8 @@
             const msg1 = document.getElementById('msg1');
             const msg2 = document.getElementById('msg2');
 
-            // 1-xabar chiqishi
             msg1.textContent = "To'g'ri topdingiz bo'tam";
 
-            // 1.5 sekunddan keyin 2-xabar chiqishi
             setTimeout(() => {
                 msg2.textContent = "Bo'ldi chiqib ketaver harp";
             }, 1500);
